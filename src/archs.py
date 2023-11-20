@@ -44,7 +44,8 @@ def fully_connected_net(dataset_name: str, widths: List[int], activation: str, b
             nn.Linear(prev_width, widths[l], bias=bias),
             get_activation(activation),
         ])
-    modules.append(nn.Linear(widths[-1], num_classes(dataset_name), bias=bias))
+    last_width = widths[-1] if len(widths) > 0 else num_pixels(dataset_name)
+    modules.append(nn.Linear(last_width, num_classes(dataset_name), bias=bias))
     return nn.Sequential(*modules)
 
 
@@ -116,40 +117,48 @@ def make_one_layer_network(h=10, seed=0, activation='tanh', sigma_w=1.9):
     return network
 
 
-def load_architecture(arch_id: str, dataset_name: str) -> nn.Module:
+def load_architecture(arch_id: str, dataset_name: str, widths: list = None) -> nn.Module:
+    if widths is None:
+        if 'fc' in arch_id:
+            widths = [200, 200]
+        elif 'cnn' in arch_id:
+            widths = [32, 32]
+
     #  ======   fully-connected networks =======
     if arch_id == 'fc-relu':
-        return fully_connected_net(dataset_name, [200, 200], 'relu', bias=True)
+        return fully_connected_net(dataset_name, widths, 'relu', bias=True)
+    elif 'fc-relu-widths' in arch_id:
+        return fully_connected_net(dataset_name, widths, 'relu', bias=True)
     elif arch_id == 'fc-elu':
-        return fully_connected_net(dataset_name, [200, 200], 'elu', bias=True)
+        return fully_connected_net(dataset_name, widths, 'elu', bias=True)
     elif arch_id == 'fc-tanh':
-        return fully_connected_net(dataset_name, [200, 200], 'tanh', bias=True)
+        return fully_connected_net(dataset_name, widths, 'tanh', bias=True)
     elif arch_id == 'fc-hardtanh':
-        return fully_connected_net(dataset_name, [200, 200], 'hardtanh', bias=True)
+        return fully_connected_net(dataset_name, widths, 'hardtanh', bias=True)
     elif arch_id == 'fc-softplus':
-        return fully_connected_net(dataset_name, [200, 200], 'softplus', bias=True)
+        return fully_connected_net(dataset_name, widths, 'softplus', bias=True)
 
     #  ======   convolutional networks =======
     elif arch_id == 'cnn-relu':
-        return convnet(dataset_name, [32, 32], activation='relu', pooling='max', bias=True)
+        return convnet(dataset_name, widths, activation='relu', pooling='max', bias=True)
     elif arch_id == 'cnn-elu':
-        return convnet(dataset_name, [32, 32], activation='elu', pooling='max', bias=True)
+        return convnet(dataset_name, widths, activation='elu', pooling='max', bias=True)
     elif arch_id == 'cnn-tanh':
-        return convnet(dataset_name, [32, 32], activation='tanh', pooling='max', bias=True)
+        return convnet(dataset_name, widths, activation='tanh', pooling='max', bias=True)
     elif arch_id == 'cnn-avgpool-relu':
-        return convnet(dataset_name, [32, 32], activation='relu', pooling='average', bias=True)
+        return convnet(dataset_name, widths, activation='relu', pooling='average', bias=True)
     elif arch_id == 'cnn-avgpool-elu':
-        return convnet(dataset_name, [32, 32], activation='elu', pooling='average', bias=True)
+        return convnet(dataset_name, widths, activation='elu', pooling='average', bias=True)
     elif arch_id == 'cnn-avgpool-tanh':
-        return convnet(dataset_name, [32, 32], activation='tanh', pooling='average', bias=True)
+        return convnet(dataset_name, widths, activation='tanh', pooling='average', bias=True)
 
     #  ======   convolutional networks with BN =======
     elif arch_id == 'cnn-bn-relu':
-        return convnet_bn(dataset_name, [32, 32], activation='relu', pooling='max', bias=True)
+        return convnet_bn(dataset_name, widths, activation='relu', pooling='max', bias=True)
     elif arch_id == 'cnn-bn-elu':
-        return convnet_bn(dataset_name, [32, 32], activation='elu', pooling='max', bias=True)
+        return convnet_bn(dataset_name, widths, activation='elu', pooling='max', bias=True)
     elif arch_id == 'cnn-bn-tanh':
-        return convnet_bn(dataset_name, [32, 32], activation='tanh', pooling='max', bias=True)
+        return convnet_bn(dataset_name, widths, activation='tanh', pooling='max', bias=True)
 
     #  ======   real networks on CIFAR-10  =======
     elif arch_id == 'resnet32':

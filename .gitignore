@@ -4,3 +4,5 @@ upload.sh
 demo.py
 .DS_Store
 .idea
+src/__pycache__/
+results

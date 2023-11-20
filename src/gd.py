@@ -14,7 +14,25 @@ from data import load_dataset, take_first, DATASETS
 def main(dataset: str, arch_id: str, loss: str, opt: str, lr: float, max_steps: int, neigs: int = 0,
          physical_batch_size: int = 1000, eig_freq: int = -1, iterate_freq: int = -1, save_freq: int = -1,
          save_model: bool = False, beta: float = 0.0, nproj: int = 0,
-         loss_goal: float = None, acc_goal: float = None, abridged_size: int = 5000, seed: int = 0):
+         loss_goal: float = None, acc_goal: float = None, abridged_size: int = 5000, seed: int = 0, num_layers: int = 3,
+         network_width: int = -1):
+
+    widths = []
+    for i in range(num_layers - 1):
+        if 'fc' in arch_id:
+            if network_width == -1:
+                network_width = 200
+            widths.append(network_width)
+        elif 'conv' in arch_id:
+            if network_width == -1:
+                network_width = 32
+            widths.append(network_width)
+
+    if len(widths) == 0:
+        arch_id = arch_id + '-widths-0'
+    else:
+        arch_id = arch_id + '-widths-' + '-'.join([str(w) for w in widths])
+
     directory = get_gd_directory(dataset, lr, arch_id, seed, opt, loss, beta)
     print(f"output directory: {directory}")
     makedirs(directory, exist_ok=True)
@@ -25,7 +43,7 @@ def main(dataset: str, arch_id: str, loss: str, opt: str, lr: float, max_steps: 
     loss_fn, acc_fn = get_loss_and_acc(loss)
 
     torch.manual_seed(seed)
-    network = load_architecture(arch_id, dataset).cuda()
+    network = load_architecture(arch_id, dataset, widths=widths).cuda()
 
     torch.manual_seed(7)
     projectors = torch.randn(nproj, len(parameters_to_vector(network.parameters())))
@@ -103,10 +121,14 @@ if __name__ == "__main__":
                         help="the frequency at which we save resuls")
     parser.add_argument("--save_model", type=bool, default=False,
                         help="if 'true', save model weights at end of training")
+    parser.add_argument("--num_layers", type=int, default=3,
+                        help="number of layers")
+    parser.add_argument("--net_width", type=int, default=200,
+                        help="network width")
     args = parser.parse_args()
 
     main(dataset=args.dataset, arch_id=args.arch_id, loss=args.loss, opt=args.opt, lr=args.lr, max_steps=args.max_steps,
          neigs=args.neigs, physical_batch_size=args.physical_batch_size, eig_freq=args.eig_freq,
          iterate_freq=args.iterate_freq, save_freq=args.save_freq, save_model=args.save_model, beta=args.beta,
          nproj=args.nproj, loss_goal=args.loss_goal, acc_goal=args.acc_goal, abridged_size=args.abridged_size,
-         seed=args.seed)
+         seed=args.seed, num_layers=args.num_layers, network_width=args.net_width)
