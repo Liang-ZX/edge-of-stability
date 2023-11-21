@@ -46,10 +46,10 @@ def get_gd_optimizer(parameters, opt: str, lr: float, momentum: float) -> Optimi
         return SGD(parameters, lr=lr, momentum=momentum, nesterov=True)
 
 
-def save_files(directory: str, arrays: List[Tuple[str, torch.Tensor]]):
+def save_files(directory: str, arrays: List[Tuple[str, torch.Tensor]], step: int):
     """Save a bunch of tensors."""
     for (arr_name, arr) in arrays:
-        torch.save(arr, f"{directory}/{arr_name}")
+        torch.save(arr, f"{directory}/{arr_name}_step{step}")
 
 
 def save_files_final(directory: str, arrays: List[Tuple[str, torch.Tensor]]):

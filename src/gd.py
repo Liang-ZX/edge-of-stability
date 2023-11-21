@@ -17,21 +17,24 @@ def main(dataset: str, arch_id: str, loss: str, opt: str, lr: float, max_steps: 
          loss_goal: float = None, acc_goal: float = None, abridged_size: int = 5000, seed: int = 0, num_layers: int = 3,
          network_width: int = -1):
 
-    widths = []
-    for i in range(num_layers - 1):
-        if 'fc' in arch_id:
-            if network_width == -1:
-                network_width = 200
-            widths.append(network_width)
-        elif 'conv' in arch_id:
-            if network_width == -1:
-                network_width = 32
-            widths.append(network_width)
+    if 'fc' in arch_id or 'conv' in arch_id:
+        widths = []
+        for i in range(num_layers - 1):
+            if 'fc' in arch_id:
+                if network_width == -1:
+                    network_width = 200
+                widths.append(network_width)
+            elif 'conv' in arch_id:
+                if network_width == -1:
+                    network_width = 32
+                widths.append(network_width)
 
-    if len(widths) == 0:
-        arch_id = arch_id + '-widths-0'
+        if len(widths) == 0:
+            arch_id = arch_id + '-widths-0'
+        else:
+            arch_id = arch_id + '-widths-' + '-'.join([str(w) for w in widths])
     else:
-        arch_id = arch_id + '-widths-' + '-'.join([str(w) for w in widths])
+        widths = None
 
     directory = get_gd_directory(dataset, lr, arch_id, seed, opt, loss, beta)
     print(f"output directory: {directory}")
@@ -71,7 +74,7 @@ def main(dataset: str, arch_id: str, loss: str, opt: str, lr: float, max_steps: 
         if save_freq != -1 and step % save_freq == 0:
             save_files(directory, [("eigs", eigs[:step // eig_freq]), ("iterates", iterates[:step // iterate_freq]),
                                    ("train_loss", train_loss[:step]), ("test_loss", test_loss[:step]),
-                                   ("train_acc", train_acc[:step]), ("test_acc", test_acc[:step])])
+                                   ("train_acc", train_acc[:step]), ("test_acc", test_acc[:step])], step)
 
         print(f"{step}\t{train_loss[step]:.3f}\t{train_acc[step]:.3f}\t{test_loss[step]:.3f}\t{test_acc[step]:.3f}")
 
